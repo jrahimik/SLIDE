@@ -21,7 +21,8 @@ use the following command to install slide
 
 
 ## Reading Sample data
-The sample data is located in the data folder of the github repository
+To obtain the the latent factor Z first run the LFD to obtain Z
+For this vignette the sample is located in the data folder of the github repository
 
 ```{r}
 
