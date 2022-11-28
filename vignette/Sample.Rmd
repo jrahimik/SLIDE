@@ -1,0 +1,47 @@
+---
+title: "A simple run of SLIDE"
+output: pdf_document
+date: '2022-11-28'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = 'C:/Users/javad/Documents/GitHub/SLIDE')
+```
+
+## Installing slide 
+use the following command to install slide
+
+```{r}
+#library(devtools)
+#install_github("jishnu-lab/SLIDE")
+```
+
+
+
+
+## Reading Sample data
+The sample data is located in the data folder of the github repository
+
+```{r}
+
+y <- readRDS(file="./Data/y.rds")
+z <- readRDS(file="./Data/z.rds")
+
+```
+## Running SLIDE
+
+In this section, we are running slide to capture standalone and interaction terms.
+
+```{r}
+
+library(SLIDE)
+library(doParallel)
+res <- SLIDE(z,y,do_interacts = T,spec=0.5)
+
+print("The significant stand alone latent factors:")
+print(res$marginal_vars)
+print("The significant interacting latent factors:")
+print(res$interaction_vars)
+
+```
