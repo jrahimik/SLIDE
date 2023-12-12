@@ -9,7 +9,7 @@ library(yaml)
       
 args <- commandArgs(trailingOnly = T)
 yaml_path  <- args[1]
-#replicate  <- args[2]
+
 sprintf("The ymal path is:  %s",yaml_path)
 er_input <- yaml::yaml.load_file(as.character(yaml_path))
 
