@@ -41,8 +41,9 @@ SLIDE <- function(z, y, method = 4, do_interacts = TRUE, betas = NULL, top_prop 
   #### MARGINAL SELECTION ######################################################
   ## select marginal variables
   colnames(z) <- paste0("z",1:ncol(z))
-  
-  marginal_vars <- marginalSLIDE(z = z,
+  y <- as.numeric(as.character(y))
+ 
+   marginal_vars <- marginalSLIDE(z = z,
                                  y = y,
                                  method = method,
                                  niter = niter,
@@ -61,16 +62,23 @@ SLIDE <- function(z, y, method = 4, do_interacts = TRUE, betas = NULL, top_prop 
   
   
   ## if no marginal variables are selected, skip making interaction terms
-  if (is.null(marginal_vars)) {
+  if (length(marginal_vars) == 0) {
     cat("    no interaction terms . . . no marginals \n")
-    if (parallel == T) { ## stop parallel computing
-      parallel::stopCluster(cl)
-    }
+    cat("    no interaction terms . . . no marginals \n")
+    #if (parallel == T) { ## stop parallel computing
+     # if (parallel == T) { ## stop parallel computing
+      #  parallel::stopCluster(cl)
+       # parallel::stopCluster(cl)
+      #}
+    #}
     return (list("marginal_vars" = marginal_vars,
-                 "interaction_vars" = NULL,
-                 "interactions" = NULL))
+                 return (list("marginal_vars" = marginal_vars,
+                              "interaction_vars" = NULL,
+                              "interaction_vars" = NULL,
+                              "interactions" = NULL))))
+                
   }
-  
+
   ## if too many marginal variables are selected, skip making interaction terms 
   m <- n - length(marginal_vars)
   if (m <= 0) {
@@ -95,6 +103,7 @@ SLIDE <- function(z, y, method = 4, do_interacts = TRUE, betas = NULL, top_prop 
   
   cat("      starting interaction selection . . . \n")
   ## do interaction term selection
+  if(length(marginal_vars)==0){return(NULL)}################
   print("Before doing interaction SLIDE")
   print(marginal_vars)
   marginal_vars<- as.numeric(sub("z","",marginal_vars))
