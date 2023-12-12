@@ -31,7 +31,7 @@ paperBench <- function(yaml_path, replicate) {
   dir.create(file.path(new_dir), showWarnings = F, recursive = T)
 
   ## set up output report text file
-  cat("Start of the analysis...")
+  cat("Start of the analysis... \n")
   #sink(file = paste0(new_dir, "replicate_output.txt")) ## make replicate output file
 
 
