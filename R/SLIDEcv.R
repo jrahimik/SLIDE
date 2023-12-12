@@ -1,14 +1,4 @@
-#' Benchmarking methods with cross-validation wrapper.
-#'
-#' A wrapper for \code{benchCV} that configures the run by reading in a provided
-#' .yaml file and creates the results directories.
-#' 
-#' @param yaml_path a string path to the .yaml file with run configuration
-#' @param replicate an integer; the replicate number used for output directory naming
-#' @return none
-#' @export
-#' 
-#' 
+
 
 require(doParallel)
 require(dplyr)
