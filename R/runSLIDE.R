@@ -25,6 +25,8 @@
 runSLIDE <- function(train_y, valid_y, train_z, valid_z, method, spec, niter, fdr, 
                      f_size, betas, top_prop, marginals, parallel, ncore, y_factor) {
   ## run SLIDE
+  
+  
   res <- SLIDE(z = train_z,
                y = train_y,
                method = method,
@@ -40,7 +42,7 @@ runSLIDE <- function(train_y, valid_y, train_z, valid_z, method, spec, niter, fd
                do_interacts = TRUE,
                fdr = fdr)
   ## if no sig margs, select 5 random ones (like in lasso)
-  if (length(res$marginal_vars) == 0) {
+  if (length(res$marginal_vars) == 0){
     cat("SLIDE selects no features - Randomly selecting 5 features. . . \n")
     sig_margs <- sample(1:ncol(train_z), 5)
     res <- SLIDE(z = train_z,
@@ -82,8 +84,8 @@ runSLIDE <- function(train_y, valid_y, train_z, valid_z, method, spec, niter, fd
       only_ind <- gsub("upsZ", "", marg_var)
       marg_var <- gsub("ups", "", marg_var)
       ## make interaction terms
-      print("possible error:")
-      print(colnames(valid_z))
+      #print("possible error:")
+      #print(colnames(valid_z))
       
       inter_union <- interUnion(marginal_vars = marg_var, z = valid_z)
       ## get interaction variable names that were chosen as significant
@@ -123,7 +125,7 @@ runSLIDE <- function(train_y, valid_y, train_z, valid_z, method, spec, niter, fd
         
       }
       
-      valid_df <- data.frame(valid_z[, marg_var], selected_interactions)
+      valid_df <- data.frame(valid_z[, marg_var,drop=F], matrix(selected_interactions,nrow=nrow(valid_z)))
       colnames(valid_df) <- c(marg_var, res$interaction_vars[sel])
       
       ## predict using trained model
@@ -154,19 +156,20 @@ runSLIDE <- function(train_y, valid_y, train_z, valid_z, method, spec, niter, fd
   }
   ## make model
   if (y_factor) {
-    ## logistic regression if y is categorical
-    slide_mod <- stats::glm(train_y ~ ., data = zs_train, family = "binomial")
+    ## logistic regressiond if y is categorical
+    #train_y <- as.factor(train_y)
+    slide_mod <- stats::glm(train_y ~ ., data = zs_train, family = "gaussian")
     ## predict values for validation set
-    valid_prob <- predict(slide_mod, zs_valid, type = "response")
+    valid_pred <- predict(slide_mod, zs_valid, type = "response")
     ## get contrasts
-    contrast <- stats::contrasts(train_y)
+    #contrast <- stats::contrasts(as.factor(train_y))
     ## get labels from class probabilities - validation set
-    valid_pred <- ifelse(valid_prob > 0.5, rownames(contrast)[2], rownames(contrast)[1])
+   # valid_pred <- ifelse(valid_prob > 0.5, rownames(contrast)[2], rownames(contrast)[1])
     
     ## predict values for training set
-    train_prob <- slide_mod$fitted.values
+    train_pred <- slide_mod$fitted.values
     ## get labels from class probabilities - training set
-    train_pred <- ifelse(train_prob > 0.5, rownames(contrast)[2], rownames(contrast)[1])
+    #train_pred <- ifelse(train_prob > 0.5, rownames(contrast)[2], rownames(contrast)[1])
   } else {
     ## simple linear regression if y is continuous
     slide_mod <- stats::lm(train_y ~ ., data = zs_train)
