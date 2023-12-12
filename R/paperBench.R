@@ -2,7 +2,7 @@
 #'
 #' A wrapper for \code{benchCV} that configures the run by reading in a provided
 #' .yaml file and creates the results directories.
-#' 
+#'
 #' @param yaml_path a string path to the .yaml file with run configuration
 #' @param replicate an integer; the replicate number used for output directory naming
 #' @return none
@@ -10,14 +10,18 @@
 
 paperBench <- function(yaml_path, replicate) {
   ## process arguments
+  require(EssReg)
+  require(doParallel)
+  cl <- parallel::detectCores()
+  registerDoParallel(cl)
   er_input <- yaml::yaml.load_file(yaml_path)
   x <- as.matrix(utils::read.csv(er_input$x_path, row.names = 1)) ## not standardized
   y <- as.matrix(utils::read.csv(er_input$y_path, row.names = 1)) ## not standardized
   z <- as.matrix(utils::read.csv(er_input$z_path, row.names = 1)) ## standardized
-  
+
   ## create results directory (if not made yet)
   dir.create(file.path(er_input$out_path), showWarnings = F, recursive = T)
-  
+
   ## checking data and mapping if binary --- I don't think we need this CHECK CHECK
   # if (er_input$eval_type == "auc") {
   #   if (length(er_input$y_order) > 2) {
@@ -28,20 +32,21 @@ paperBench <- function(yaml_path, replicate) {
   #   orig_y <- y$cat_y
   #   y <- y$cont_y
   # }
-  
+
   ## create replicate output directory
   new_dir <- paste0(er_input$out_path, "replicate", replicate, "/")
   dir.create(file.path(new_dir), showWarnings = F, recursive = T)
-  
+
   ## set up output report text file
   #sink(file = paste0(new_dir, "cv_output.txt")) ## make replicate output file
-    
+
   ## run cross-validation regime
   benchCV2(k = er_input$k,
           x = x,
           y = y,
           z = z,
-          std = er_input$std,
+          std_cv  = er_input$std,
+          std_y=er_input$std_y,
           delta = er_input$delta,
           eval_type = er_input$eval_type,
           lambda = er_input$lambda,
@@ -51,14 +56,13 @@ paperBench <- function(yaml_path, replicate) {
           alpha_level = er_input$alpha_level,
           thresh_fdr = er_input$thresh_fdr,
           parallel = er_input$parallel,
-          y_order = er_input$y_order,
           spec = er_input$spec,
           niter = er_input$niter,
           f_size = er_input$f_size,
           fdr = er_input$fdr,
           ncore = er_input$ncore,
           rep = replicate)
-    
+
   ## close output report text file
   #sink()
 }

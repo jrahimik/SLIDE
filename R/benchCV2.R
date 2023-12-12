@@ -46,7 +46,7 @@ benchCV2 <- function(k = 5, y, x,z, delta, std_cv, std_y, thresh_fdr = 0.2, lamb
   zero_in <- TRUE
   while (zero_in) {
     if (y_factor) {
-      group_inds <- caret::createFolds(y, k = k, 
+      group_inds <- caret::createFolds(factor(y), k = k,
                                        list = TRUE)
     }
     else {
@@ -115,9 +115,9 @@ benchCV2 <- function(k = 5, y, x,z, delta, std_cv, std_y, thresh_fdr = 0.2, lamb
     valid_x_raw <- matrix(raw_x[valid_ind, ], ncol = ncol(x))
     train_z     <- z[-valid_ind, ,drop=F] ## training z's
     valid_z     <- z[valid_ind, ,drop=F] ## validation z's
-    
+
     if (std_cv) {
-      stands <- standCV(train_y = train_y_raw, train_x = train_x_raw, 
+      stands <- standCV(train_y = train_y_raw, train_x = train_x_raw,
                         valid_y = valid_y_raw, valid_x = valid_x_raw)
       train_x_std <- stands$train_x
       train_y <- stands$train_y
@@ -165,20 +165,20 @@ benchCV2 <- function(k = 5, y, x,z, delta, std_cv, std_y, thresh_fdr = 0.2, lamb
         use_y_train_ER <- train_y_raw
       }
       if (grepl(x = method_j, pattern = "plainER", fixed = TRUE)) {
-        res <- plainER(y = use_y_train_ER, x = train_x_raw, 
-                       x_std = train_x_std, std_y = std_y, sigma = NULL, 
-                       delta = delta, lambda = lambda, thresh_fdr = thresh_fdr, 
+        res <- plainER(y = use_y_train_ER, x = train_x_raw,
+                       x_std = train_x_std, std_y = std_y, sigma = NULL,
+                       delta = delta, lambda = lambda, thresh_fdr = thresh_fdr,
                        rep_cv = rep_cv, alpha_level = alpha_level)
         if (is.null(res)) {
           #return(NULL)
-          
+
           pred_vals <- rnorm(n=length(valid_z))
-          
+
         }
-        
+
         if(is.null(res$pred$er_predictor)){pred_all_betas <- matrix(rnorm(n=dim(valid_x_std)[2]),ncol=1)}else{
           pred_all_betas <- res$pred$er_predictor}
-        
+
         pred_vals <- valid_x_std %*% pred_all_betas
       }else if (grepl(x = method_j, pattern = "SLIDE", fixed = TRUE)) { ## run SLIDE
         res <- runSLIDE(
@@ -196,76 +196,76 @@ benchCV2 <- function(k = 5, y, x,z, delta, std_cv, std_y, thresh_fdr = 0.2, lamb
           top_prop = NULL,
           ncore = ncore,
           fdr = fdr)
-        
+
         pred_vals <- res$valid_pred }
-      
-      
-        else if (grepl(x = method_j, pattern = "plsr", fixed = TRUE)) {
-        res <- pls::plsr(use_y_train ~ train_x_std, validation = "CV", 
+
+
+      else if (grepl(x = method_j, pattern = "plsr", fixed = TRUE)) {
+        res <- pls::plsr(use_y_train ~ train_x_std, validation = "CV",
                          segments = 5)
         n_comp <- pls::selectNcomp(res, method = "randomization")
         n_comp <- ifelse(n_comp == 0, 1, n_comp)
-        pred_vals <- predict(res, comps = n_comp, newdata = valid_x_std, 
+        pred_vals <- predict(res, comps = n_comp, newdata = valid_x_std,
                              type = "response")
       }
       else if (grepl(x = method_j, pattern = "pcr", fixed = TRUE)) {
-        res <- pls::pcr(use_y_train ~ train_x_std, validation = "CV", 
+        res <- pls::pcr(use_y_train ~ train_x_std, validation = "CV",
                         segments = 5)
         n_comp <- pls::selectNcomp(res, method = "randomization")
         n_comp <- ifelse(n_comp == 0, 1, n_comp)
-        pred_vals <- predict(res, comps = n_comp, newdata = valid_x_std, 
+        pred_vals <- predict(res, comps = n_comp, newdata = valid_x_std,
                              type = "response")
       }
       else if (grepl(x = method_j, pattern = "plsda", fixed = TRUE)) {
         use_y_train_syn <- make.names(use_y_train)
         use_y_valid_syn <- make.names(valid_y_labs)
-        ctrl <- caret::trainControl(method = "repeatedcv", 
+        ctrl <- caret::trainControl(method = "repeatedcv",
                                     classProbs = T, savePredictions = T, summaryFunction = caret::twoClassSummary)
-        res <- caret::train(y = use_y_train_syn, x = train_x_std, 
+        res <- caret::train(y = use_y_train_syn, x = train_x_std,
                             trControl = ctrl, metric = "ROC", method = "pls")
-        pred_vals <- predict(res, newdata = valid_x_std, 
+        pred_vals <- predict(res, newdata = valid_x_std,
                              type = "prob")
       }
       else if (grepl(x = method_j, pattern = "pclr", fixed = TRUE)) {
-        princ_comps <- stats::prcomp(x = train_x_std, 
+        princ_comps <- stats::prcomp(x = train_x_std,
                                      center = FALSE, scale = FALSE)
         num_pcs <- nrow(train_x_std) - 1
         train_pcs <- princ_comps$x[, 1:min(num_pcs, ncol(princ_comps$x))]
-        valid_pcs <- scale(valid_x_std, princ_comps$center, 
+        valid_pcs <- scale(valid_x_std, princ_comps$center,
                            princ_comps$scale) %*% princ_comps$rotation
-        res <- stats::glm(as.numeric(as.character(use_y_train)) ~ 
+        res <- stats::glm(as.numeric(as.character(use_y_train)) ~
                             ., data = as.data.frame(train_pcs), family = "binomial")
-        pred_vals <- predict(res, newdata = as.data.frame(valid_pcs), 
+        pred_vals <- predict(res, newdata = as.data.frame(valid_pcs),
                              type = "response")
       }
       else {
         if ((nrow(train_x_std)/10) < 3) {
-          res <- glmnet::cv.glmnet(train_x_std, use_y_train, 
-                                   alpha = 1, nfolds = 5, standardize = F, grouped = F, 
+          res <- glmnet::cv.glmnet(train_x_std, use_y_train,
+                                   alpha = 1, nfolds = 5, standardize = F, grouped = F,
                                    family = lasso_fam)
         }
         else {
-          res <- glmnet::cv.glmnet(train_x_std, use_y_train, 
-                                   alpha = 1, nfolds = 10, standardize = F, 
+          res <- glmnet::cv.glmnet(train_x_std, use_y_train,
+                                   alpha = 1, nfolds = 10, standardize = F,
                                    grouped = F, family = lasso_fam)
         }
         beta_hat <- coef(res, s = res$lambda.min)[-1]
         sub_beta_hat <- which(beta_hat != 0)
         if (length(sub_beta_hat) == 0) {
           cat("Lasso selects no features - Randomly selecting 5 features. . . \n")
-          sub_beta_hat <- sample(1:ncol(train_x_std), 
+          sub_beta_hat <- sample(1:ncol(train_x_std),
                                  5)
         }
         lasso_train <- as.data.frame(train_x_std[, sub_beta_hat])
         lasso_valid <- as.data.frame(valid_x_std[, sub_beta_hat])
         if (dim(lasso_valid)[[2]] == 1) {
-          lasso_valid <- as.data.frame(t(valid_x_std[, 
+          lasso_valid <- as.data.frame(t(valid_x_std[,
                                                      sub_beta_hat]))
         }
-        colnames(lasso_train) <- colnames(lasso_valid) <- paste0("X", 
+        colnames(lasso_train) <- colnames(lasso_valid) <- paste0("X",
                                                                  sub_beta_hat)
         if (y_factor) {
-          lasso_lm <- stats::glm(use_y_train ~ ., data = lasso_train, 
+          lasso_lm <- stats::glm(use_y_train ~ ., data = lasso_train,
                                  family = lasso_fam)
         }
         else {
@@ -279,13 +279,13 @@ benchCV2 <- function(k = 5, y, x,z, delta, std_cv, std_y, thresh_fdr = 0.2, lamb
           pred_vals <- pred_vals[, 1]
         }
         fold_res <- cbind(method_j, pred_vals, as.numeric(as.character(valid_y_labs)))
-        colnames(fold_res) <- c("method", "pred_vals", 
+        colnames(fold_res) <- c("method", "pred_vals",
                                 "true_vals")
         results <- rbind(results, fold_res)
       }
       else {
         fold_res <- cbind(method_j, pred_vals, valid_y)
-        colnames(fold_res) <- c("method", "pred_vals", 
+        colnames(fold_res) <- c("method", "pred_vals",
                                 "true_vals")
         results <- rbind(results, fold_res)
       }
@@ -295,12 +295,12 @@ benchCV2 <- function(k = 5, y, x,z, delta, std_cv, std_y, thresh_fdr = 0.2, lamb
   final_results <- NULL
   if (eval_type == "auc") {
     for (i in 1:length(methods)) {
-      method_res <- results %>% dplyr::filter(method == 
+      method_res <- results %>% dplyr::filter(method ==
                                                 methods[i])
       predicted <- as.numeric(method_res$pred_vals)
       true <- as.numeric(method_res$true_vals)
       print("before prediction")
-      predicted[is.na(predicted)] <- median(predicted, 
+      predicted[is.na(predicted)] <- median(predicted,
                                             na.rm = TRUE)
       method_roc <- ROCR::prediction(predicted, true)
       print("after prediction")
@@ -315,13 +315,13 @@ benchCV2 <- function(k = 5, y, x,z, delta, std_cv, std_y, thresh_fdr = 0.2, lamb
   }
   else {
     for (i in 1:length(methods)) {
-      method_res <- results %>% dplyr::filter(method == 
+      method_res <- results %>% dplyr::filter(method ==
                                                 methods[i])
       predicted <- as.numeric(method_res$pred_vals)
       true <- as.numeric(method_res$true_vals)
       method_corr <- cor(predicted, true, method = "spearman")
       method_mse <- sum((predicted - true)^2)/length(predicted)
-      method_res <- c(method = methods[i], corr = as.numeric(method_corr), 
+      method_res <- c(method = methods[i], corr = as.numeric(method_corr),
                       mse = as.numeric(method_mse))
       final_results <- rbind(final_results, method_res)
     }
@@ -331,6 +331,6 @@ benchCV2 <- function(k = 5, y, x,z, delta, std_cv, std_y, thresh_fdr = 0.2, lamb
   combined_res <- NULL
   combined_res$each_fold <- results
   combined_res$final_corr <- final_results
-  saveRDS(combined_res, file = paste0(new_dir, "results.rds"))
+  saveRDS(combined_res, file = paste0(new_dir,"results",rep,".rds"))
   return(final_results)
 }
