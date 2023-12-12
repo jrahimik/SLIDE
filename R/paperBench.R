@@ -34,10 +34,10 @@ paperBench <- function(yaml_path, replicate) {
   dir.create(file.path(new_dir), showWarnings = F, recursive = T)
   
   ## set up output report text file
-  sink(file = paste0(new_dir, "cv_output.txt")) ## make replicate output file
+  #sink(file = paste0(new_dir, "cv_output.txt")) ## make replicate output file
     
   ## run cross-validation regime
-  benchCV(k = er_input$k,
+  benchCV2(k = er_input$k,
           x = x,
           y = y,
           z = z,
@@ -60,6 +60,6 @@ paperBench <- function(yaml_path, replicate) {
           rep = replicate)
     
   ## close output report text file
-  sink()
+  #sink()
 }
 
