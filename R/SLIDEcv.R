@@ -12,7 +12,6 @@
 
 require(doParallel)
 require(dplyr)
-#library(SLIDE)
 library(EssReg)
 library(yaml)
 
