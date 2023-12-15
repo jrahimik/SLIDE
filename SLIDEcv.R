@@ -11,8 +11,8 @@ yaml_path  <- args[1]
 sprintf("The ymal path is:  %s",yaml_path)
 er_input <- yaml::yaml.load_file(as.character(yaml_path))
 
-  
-  
+
+
 
 for(j in 1:er_input$nreps){
 
@@ -22,7 +22,7 @@ for(j in 1:er_input$nreps){
 
 er_input <- yaml::yaml.load_file(yaml_path)
 
-pathLists <- list.files(er_input$out_path,recursive = T,pattern = "results.rds")  
+pathLists <- list.files(er_input$out_path,recursive = T,pattern = "results")
 perfList <- lapply(paste0(er_input$out_path,pathLists), readRDS)
 perRes <- do.call(rbind,lapply(perfList,function(x){x$final_corr}))
 
@@ -45,4 +45,4 @@ if (er_input$eval_type == "corr") {
     ggplot2::scale_alpha(guide = 'none')
 }
 library(ggplot2)
-ggsave(paste0(er_input$out_path,"/delta",er_input$delta,"lambda",er_input$lambda,"_boxplot.pdf"))
+ggsave(paste0(er_input$out_path,"/delta",er_input$delta,"lambda",er_input$lambda,"_boxplot.pdf"),lambda_boxplot)
