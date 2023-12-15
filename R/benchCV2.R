@@ -92,7 +92,7 @@ benchCV2 <- function(k = 5, y, x,z, delta, std_cv, std_y, thresh_fdr = 0.2, lamb
       }
     }
   }
-  methods <- c("SLIDE","plainER")
+  methods <- c("SLIDE")
   if (benchmark) {
     if (y_factor) {
       methods <- c(methods, "plsda", "pclr")
